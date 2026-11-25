@@ -1,4 +1,4 @@
-#st-keepalive-float {
+#rita-tt-android-keepalive-float {
     position: fixed;
     right: 12px;
     bottom: calc(78px + env(safe-area-inset-bottom));
@@ -6,7 +6,7 @@
     pointer-events: none;
 }
 
-#st-keepalive-float button {
+#rita-tt-android-keepalive-float button {
     pointer-events: auto;
     border: 1px solid rgba(255,255,255,.35);
     border-radius: 999px;
@@ -18,22 +18,22 @@
     line-height: 1.2;
 }
 
-#st-keepalive-float button[aria-pressed="true"] {
+#rita-tt-android-keepalive-float button[aria-pressed="true"] {
     background: rgba(35,125,75,.95);
 }
 
-#st-keepalive-settings .st-keepalive-help {
+#rita-tt-android-keepalive .st-keepalive-help {
     margin: 6px 0 10px;
     opacity: .8;
     line-height: 1.45;
 }
 
-#st-keepalive-settings .st-keepalive-status {
+#rita-tt-android-keepalive .st-keepalive-status {
     display: inline-block;
     margin-left: 8px;
     opacity: .8;
 }
 
-#st-keepalive-settings .st-keepalive-status.st-keepalive-on {
+#rita-tt-android-keepalive .st-keepalive-status.st-keepalive-on {
     color: #7de39b;
 }

@@ -1,27 +1,21 @@
-# Rita 的酒馆后台保活音频
+# Rita 后台保活 · TT 安卓
 
-一个给 SillyTavern 移动端使用的前端扩展。
+面向 TauriTavern 安卓版的后台保活音频扩展，基于 [Rita 的 SillyTavern 扩展](https://github.com/rita090qwq/rita-sillytavern-background-audio)。
 
-## 功能
+点击「开启保活」后，扩展会循环播放随包附带的低音量音频。音频被系统暂停时，回到酒馆会尝试恢复播放。播放状态显示在扩展面板和悬浮按钮上。
 
-点击“🔇 开启保活”后，扩展会播放极低音量的循环背景音频，并设置 Media Session。这样切换到其他 App 时，浏览器更有机会继续保持酒馆的生成请求。
+## 安装与使用
 
-这不是服务器端任务队列，iOS 仍可能因为系统资源管理而暂停页面，因此不能保证所有情况下都不中断。
+1. 在 TT 安卓版打开「扩展 → 安装扩展」，粘贴 `https://github.com/kaelisvespera/rita-sillytavern-background-audio`。如果之前通过 Rita 原仓库安装过同名扩展，先在「管理扩展」里卸载旧版，再用这个地址安装。
+2. 在扩展面板打开「Rita 后台保活 · TT 安卓」，点击「开启保活」。出现「音频播放中」后再切换应用。也可以用聊天页右下方的「保活」按钮开关。
+3. 用完点击「关闭保活」。如果回到酒馆后提示再次开启，点一下按钮重试。
 
-## 安装
+## 安卓后台行为
 
-在 SillyTavern 中打开“扩展程序 → 安装扩展程序”，粘贴本仓库地址：
+音频保活的实际效果取决于安卓系统和 WebView。锁屏、系统省电或其他应用抢占音频焦点时，音频可能中断。系统结束 TT 进程后，需要打开应用重新开启。
 
-https://github.com/rita090qwq/rita-sillytavern-background-audio
+## 文件与许可
 
-安装后刷新页面，在扩展面板中打开“后台保活音频”，点击“开启保活”。
-
-## 文件
-
-- manifest.json：酒馆扩展清单
-- index.js：音频与 Media Session 逻辑
-- style.css：按钮样式
-
-## 许可
-
-MIT License
+- `manifest.json` 注册扩展，`index.js` 管理起停和恢复，`style.css` 定义按钮及状态样式。
+- `keepalive.wav` 是随包附带的两秒低振幅 PCM 音频。音量写入音频文件，播放器使用默认增益。
+- 原作者 Rita，沿用 [MIT 许可证](LICENSE)。
