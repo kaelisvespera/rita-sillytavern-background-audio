@@ -22,23 +22,30 @@
         </div>`;
     settings.appendChild(panel);
 
-    const floating = document.createElement('div');
-    floating.id = 'rita-tt-android-keepalive-float';
-    floating.innerHTML = '<button type="button" aria-label="后台保活" aria-pressed="false">保活</button>';
-    document.body.appendChild(floating);
+    const floatingButton = document.createElement('button');
+    floatingButton.id = 'rita-tt-android-keepalive-float';
+    floatingButton.type = 'button';
+    floatingButton.setAttribute('aria-label', '后台保活');
+    floatingButton.setAttribute('aria-pressed', 'false');
+    const floatingIcon = document.createElement('i');
+    floatingIcon.className = 'fa-solid fa-volume-xmark';
+    floatingIcon.setAttribute('aria-hidden', 'true');
+    floatingButton.appendChild(floatingIcon);
+    document.body.appendChild(floatingButton);
 
     const button = panel.querySelector('#rita-tt-android-keepalive-toggle');
     const status = panel.querySelector('#rita-tt-android-keepalive-status');
-    const floatingButton = floating.querySelector('button');
     let audio = null;
     let pending = null;
 
     function setState(message, playing = false) {
         const enabled = audio !== null;
         button.textContent = enabled ? '关闭保活' : '开启保活';
-        floatingButton.textContent = enabled ? (playing ? '保活 · 播放中' : '保活 · 等待') : '保活';
         button.setAttribute('aria-pressed', String(enabled));
         floatingButton.setAttribute('aria-pressed', String(enabled));
+        floatingButton.classList.toggle('st-keepalive-on', playing);
+        floatingIcon.classList.toggle('fa-volume-high', enabled);
+        floatingIcon.classList.toggle('fa-volume-xmark', !enabled);
         status.textContent = message;
         status.classList.toggle('st-keepalive-on', playing);
     }
