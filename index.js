@@ -15,7 +15,7 @@
                 <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
             </div>
             <div class="inline-drawer-content">
-                <p class="st-keepalive-help">切换应用前先开启。音频中断时，回到酒馆会尝试恢复。</p>
+                <p class="st-keepalive-help">切换应用前确认音频正在播放。音频中断时，回到酒馆会尝试恢复。</p>
                 <p class="st-keepalive-help">
                     <label for="rita-tt-android-keepalive-mode">播放方式</label>
                     <select id="rita-tt-android-keepalive-mode">
@@ -45,6 +45,7 @@
     const mode = panel.querySelector('#rita-tt-android-keepalive-mode');
     let playback = null;
     let pending = null;
+    let waitingForGesture = false;
 
     let saved = {};
     try {
@@ -53,10 +54,11 @@
         // Storage can be unavailable in private or embedded contexts.
     }
     if (saved.mode === 'web-audio') mode.value = 'web-audio';
+    let autoEnabled = typeof saved.autoEnabled === 'boolean' ? saved.autoEnabled : saved.wasEnabled !== false;
 
-    function saveSettings(wasEnabled) {
+    function saveSettings() {
         try {
-            localStorage.setItem(panelId, JSON.stringify({ mode: mode.value, wasEnabled }));
+            localStorage.setItem(panelId, JSON.stringify({ mode: mode.value, autoEnabled }));
         } catch {
             // The current page can still play audio without saving preferences.
         }
@@ -75,13 +77,18 @@
         status.classList.toggle('st-keepalive-on', playing);
     }
 
-    function stop(message = '未开启', preserveResumeHint = false) {
+    function stop(message = '未开启') {
         const previous = playback;
         playback = null;
         pending = null;
+        waitingForGesture = false;
         previous?.dispose();
-        if (!preserveResumeHint) saveSettings(false);
         setState(message);
+    }
+
+    function waitForGesture() {
+        stop('等待自动播放，请点一下页面或保活按钮。');
+        waitingForGesture = true;
     }
 
     function syncPlayback(current) {
@@ -165,29 +172,34 @@
         return current;
     }
 
-    async function play() {
+    async function play(automatic = false) {
         const current = playback;
         if (!current || pending === current || current.isPlaying()) return;
 
         pending = current;
         setState('正在启动音频…');
+        // When autoplay is blocked, AudioContext.resume() can stay pending.
+        const timer = automatic && mode.value === 'web-audio' ? setTimeout(() => {
+            if (playback !== current || current.isPlaying()) return;
+            waitForGesture();
+            if (navigator.userActivation?.isActive) start();
+        }, 1500) : undefined;
         try {
             await current.play();
             syncPlayback(current);
         } catch (error) {
             if (playback === current) {
-                stop(error.name === 'NotAllowedError' ? '请再次点击开启保活。' : '音频播放失败，请重试。');
+                if (automatic && error.name === 'NotAllowedError') waitForGesture();
+                else stop(error.name === 'NotAllowedError' ? '请再次点击开启保活。' : '音频播放失败，请重试。');
             }
         } finally {
+            clearTimeout(timer);
             if (pending === current) pending = null;
         }
     }
 
-    function toggle() {
-        if (playback) {
-            stop();
-            return;
-        }
+    function start(automatic = false) {
+        waitingForGesture = false;
 
         if (mode.value === 'web-audio') {
             if (typeof AudioContext !== 'function') {
@@ -204,26 +216,36 @@
             playback = createWavPlayback();
         }
 
-        saveSettings(true);
-        void play();
+        void play(automatic);
+    }
+
+    function toggle() {
+        autoEnabled = !playback;
+        saveSettings();
+        if (autoEnabled) start();
+        else stop();
     }
 
     function resumeOnReturn() {
         if (document.visibilityState === 'visible') void play();
     }
 
-    if (saved.wasEnabled === true) setState('上次保活未关闭，请点击开启保活继续播放。');
     mode.addEventListener('change', () => {
-        saveSettings(false);
-        setState('未开启');
+        saveSettings();
+        if (!waitingForGesture) setState('未开启');
     });
     button.addEventListener('click', toggle);
     floatingButton.addEventListener('click', toggle);
+    // The original toggle and the Umbrella slot handle their own clicks first.
+    document.addEventListener('click', event => {
+        if (waitingForGesture && event.isTrusted) start();
+    });
     document.addEventListener('visibilitychange', resumeOnReturn);
     document.addEventListener('resume', resumeOnReturn);
     window.addEventListener('pageshow', resumeOnReturn);
     window.addEventListener('focus', resumeOnReturn);
     window.addEventListener('pagehide', (event) => {
-        if (!event.persisted && playback) stop('未开启', true);
+        if (!event.persisted && playback) stop();
     });
+    if (autoEnabled) start(true);
 })();
