@@ -132,9 +132,9 @@
 
         const current = {
             isPlaying: () => source !== null && context.state === 'running',
-            async play() {
+            async play(onContextResumed) {
                 // Request resume in the original click before loading any assets.
-                const resume = context.resume();
+                const resume = context.resume().then(onContextResumed);
                 if (source) {
                     await resume;
                     return;
@@ -185,7 +185,7 @@
             if (navigator.userActivation?.isActive) start();
         }, 1500) : undefined;
         try {
-            await current.play();
+            await current.play(() => clearTimeout(timer));
             syncPlayback(current);
         } catch (error) {
             if (playback === current) {
